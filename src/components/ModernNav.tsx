@@ -11,6 +11,7 @@ import LiquidGlassContainer from './LiquidGlassContainer';
 import { useSite } from './SiteProvider';
 import { ThemeToggle } from './ThemeToggle';
 import { UserMenu } from './UserMenu';
+import { BackButton } from './BackButton';
 
 interface NavItem {
   icon: any;
@@ -134,7 +135,7 @@ export default function ModernNav() {
       {/* Desktop Top Navigation removed per request */}
 
       {/* Desktop Bottom Centered Floating Bar with 9 anchors */}
-      <nav className='hidden md:block fixed bottom-4 left-1/2 -translate-x-1/2 z-50'>
+      <nav className='hidden md:block fixed bottom-4 left-1/2 -translate-x-1/2 z-[1200]'>
         <LiquidGlassContainer
           className='px-3 py-2 overflow-hidden'
           roundedClass='rounded-[28px]'
@@ -190,6 +191,18 @@ export default function ModernNav() {
       <span className='text-base sm:text-lg font-semibold tracking-wide bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 dark:from-green-400 dark:via-emerald-300 dark:to-teal-300 bg-clip-text text-transparent'>
         {siteName}
       </span>
+    </LiquidGlassContainer>
+  </nav>
+  {/* Desktop Top-Left Back Button */}
+  <nav className='hidden md:block fixed top-3 left-4 z-50'>
+    <LiquidGlassContainer
+      className='px-1 py-1'
+      roundedClass='rounded-full'
+      intensity='medium'
+      shadow='lg'
+      border='subtle'
+    >
+      <BackButton />
     </LiquidGlassContainer>
   </nav>
       {/* Desktop Top-Right Controls (Theme + User) - restored */}

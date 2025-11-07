@@ -24,15 +24,18 @@ const PageLayout = ({ children, activePath = '/', useModernNav = true }: PageLay
         {/* Modern Navigation - Top (Desktop) & Bottom (Mobile) */}
         <ModernNav />
 
-        {/* 移动端头部 - Logo和用户菜单 */}
+        {/* 移动端头部 - 返回键、Logo、用户菜单 */}
         <div className='md:hidden fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-sm'>
           <div className='flex items-center justify-between h-11 px-4'>
-            {/* Logo */}
-            <div className='text-base font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 dark:from-green-400 dark:via-emerald-400 dark:to-teal-400 bg-clip-text text-transparent'>
-              {siteName}
+            {/* 左侧：返回键 + Logo */}
+            <div className='flex items-center gap-2'>
+              {['/play', '/live'].includes(activePath) && <BackButton />}
+              <div className='text-base font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 dark:from-green-400 dark:via-emerald-400 dark:to-teal-400 bg-clip-text text-transparent'>
+                {siteName}
+              </div>
             </div>
 
-            {/* User Menu & Theme Toggle */}
+            {/* 右侧：主题切换 + 用户菜单 */}
             <div className='flex items-center gap-2'>
               <ThemeToggle />
               <UserMenu />

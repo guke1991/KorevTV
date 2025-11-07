@@ -72,14 +72,12 @@ body {
 }
 
 html:not(.dark) body {
+  /* KorevTV 三色渐变：#FFD6D6 → #A4CBFF → #B9FFF8 */
   background: linear-gradient(
     180deg,
-    #e6f3fb 0%,
-    #eaf3f7 18%,
-    #f7f7f3 38%,
-    #e9ecef 60%,
-    #dbe3ea 80%,
-    #d3dde6 100%
+    #FFD6D6 0%,
+    #A4CBFF 45%,
+    #B9FFF8 100%
   );
   background-attachment: fixed;
 }
