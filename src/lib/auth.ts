@@ -16,7 +16,11 @@ export function getAuthInfoFromCookie(request: NextRequest): {
   }
 
   try {
-    const decoded = decodeURIComponent(authCookie.value);
+    // 兼容双重编码的情况（某些环境会将cookie值再编码一次）
+    let decoded = decodeURIComponent(authCookie.value);
+    if (decoded.includes('%')) {
+      decoded = decodeURIComponent(decoded);
+    }
     const authData = JSON.parse(decoded);
     return authData;
   } catch (error) {
