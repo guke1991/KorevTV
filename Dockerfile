@@ -29,6 +29,12 @@ COPY . .
 # 在构建阶段也显式设置 DOCKER_ENV，
 ENV DOCKER_ENV=true
 
+# 更新 Browserslist 数据，消除 caniuse-lite 过期警告
+RUN pnpm exec update-browserslist-db@latest
+
+# 提升 Node 可用内存，减少类型检查或打包过程中的取消报错
+ENV NODE_OPTIONS=--max-old-space-size=2048
+
 # 生成生产构建
 RUN pnpm run build
 
@@ -60,4 +66,4 @@ USER nextjs
 EXPOSE 3000
 
 # 使用自定义启动脚本，先预加载配置再启动服务器
-CMD ["node", "start.js"] 
+CMD ["node", "start.js"]
