@@ -102,6 +102,9 @@ export default function WatchPartyPanel() {
           } else if (data.payload?.action === 'leave') {
             setMembers((prev) => prev.filter((m) => m !== memberName));
           }
+        } else if (data.type === 'members') {
+          const list = Array.isArray(data.payload?.members) ? (data.payload.members as string[]) : [];
+          setMembers(list);
         } else if (data.type === 'chat') {
           const msg: ChatMsg = {
             id: `${data.ts}-${Math.random().toString(36).slice(2, 6)}`,
@@ -122,14 +125,15 @@ export default function WatchPartyPanel() {
     emit('presence', { action: 'join', name, isHost: createdRoomRef.current });
     ensureVideoListeners();
 
-    // 如果是房间创建者，连接后立即上报一次当前播放状态，供后续加入者初始对齐
-    if (createdRoomRef.current) {
+    // 连接后无论是否为创建者，都主动上报一次当前播放状态（稍作延迟），
+    // 服务端仅记录主机的状态，其它成员不会覆盖。
+    setTimeout(() => {
       const v = getVideo();
       if (v) {
         const state = v.paused ? 'pause' : 'play';
         emit('playback', { state, time: v.currentTime });
       }
-    }
+    }, 150);
   };
 
   const disconnect = () => {
