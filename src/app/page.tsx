@@ -28,7 +28,6 @@ import AIRecommendModal from '@/components/AIRecommendModal';
 import CapsuleSwitch from '@/components/CapsuleSwitch';
 import ContinueWatching from '@/components/ContinueWatching';
 import HeroBanner from '@/components/HeroBanner';
-import ForYouRow from '@/components/ForYouRow';
 import PageLayout from '@/components/PageLayout';
 import ScrollableRow from '@/components/ScrollableRow';
 import SectionTitle from '@/components/SectionTitle';
@@ -684,81 +683,6 @@ function HomeClient() {
               )}
 
               {/* 继续观看已移至中间页 */}
-
-              {/* 为你推荐（基于继续观看与收藏的个性化） */}
-              <ForYouRow />
-
-              {/* 最近热播（聚合 Top 20） */}
-              {!loading && (
-                <section className='mb-8'>
-                  <div className='mb-4 flex items-center justify-between'>
-                    <SectionTitle title="最近热播" icon={Sparkles} iconColor="text-pink-500" />
-                  </div>
-                  <ScrollableRow>
-                    {[
-                      // 电影、电视剧、综艺来自豆瓣
-                      ...hotMovies.slice(0, 6).map((movie) => ({
-                        id: movie.id,
-                        title: movie.title,
-                        poster: movie.poster,
-                        year: movie.year,
-                        type: 'movie' as const,
-                        source_name: '豆瓣',
-                        query: movie.title,
-                        episodes: 1,
-                      })),
-                      ...hotTvShows.slice(0, 6).map((show) => ({
-                        id: show.id,
-                        title: show.title,
-                        poster: show.poster,
-                        year: show.year,
-                        type: 'tv' as const,
-                        source_name: '豆瓣',
-                        query: show.title,
-                        episodes: 99,
-                        remarks: show.episodes ? `更新至${show.episodes}集` : undefined,
-                      })),
-                      ...hotVarietyShows.slice(0, 4).map((show) => ({
-                        id: show.id,
-                        title: show.title,
-                        poster: show.poster,
-                        year: show.year,
-                        type: 'variety' as const,
-                        source_name: '豆瓣',
-                        query: show.title,
-                        episodes: 50,
-                      })),
-                      // 短剧
-                      ...hotShortDramas.slice(0, 4).map((drama) => ({
-                        id: drama.id.toString(),
-                        title: drama.name,
-                        poster: drama.cover,
-                        year: '',
-                        type: 'shortdrama' as const,
-                        source_name: '短剧',
-                        query: drama.name,
-                        episodes: drama.episode_count || 20,
-                        remarks: '短剧',
-                      })),
-                    ].slice(0, 20).map((item, idx) => (
-                      <div key={`${item.id}-${idx}`} className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'>
-                        <VideoCard
-                          from='douban'
-                          id={String(item.id)}
-                          title={item.title}
-                          poster={item.poster}
-                          year={item.year}
-                          source_name={item.source_name}
-                          episodes={item.episodes}
-                          type={item.type}
-                          query={item.query}
-                          remarks={item.remarks}
-                        />
-                      </div>
-                    ))}
-                  </ScrollableRow>
-                </section>
-              )}
 
               {/* 即将上映 */}
               {(() => {

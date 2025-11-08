@@ -108,18 +108,6 @@ export async function POST(request: NextRequest) {
       maxTokens: aiRecommendConfig.maxTokens ?? 2000
     };
 
-    // 同步个性化权重（可选字段）
-    if (aiRecommendConfig.recommendWeights) {
-      const rw = aiRecommendConfig.recommendWeights;
-      adminConfig.RecommendWeights = {
-        wFav: Number(rw.wFav ?? 3.0),
-        wRecency: Number(rw.wRecency ?? 2.0),
-        wProgress: Number(rw.wProgress ?? 1.5),
-        decayDays: Number(rw.decayDays ?? 7),
-        maxItems: Number(rw.maxItems ?? 12),
-      };
-    }
-
     // 保存配置到数据库
     await db.saveAdminConfig(adminConfig);
     
@@ -137,24 +125,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       error: error instanceof Error ? error.message : 'Internal server error' 
     }, { status: 500 });
-  }
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    const authInfo = getAuthInfoFromCookie(request);
-    if (!authInfo || !authInfo.username) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const adminConfig = await getConfig();
-    // 返回安全子集（不包含 API Key 等敏感信息）
-    return NextResponse.json({
-      aiEnabled: !!adminConfig.AIRecommendConfig?.enabled,
-      recommendWeights: adminConfig.RecommendWeights || null,
-    }, {
-      headers: { 'Cache-Control': 'no-store' }
-    });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch config' }, { status: 500 });
   }
 }

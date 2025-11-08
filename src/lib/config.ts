@@ -398,17 +398,6 @@ export async function configSelfCheck(adminConfig: AdminConfig): Promise<AdminCo
     };
   }
 
-  // 确保个性化权重配置有默认值
-  if (!adminConfig.RecommendWeights) {
-    adminConfig.RecommendWeights = {
-      wFav: 3.0,
-      wRecency: 2.0,
-      wProgress: 1.5,
-      decayDays: 7,
-      maxItems: 12,
-    };
-  }
-
   // 确保YouTube配置有默认值
   if (!adminConfig.YouTubeConfig) {
     adminConfig.YouTubeConfig = {

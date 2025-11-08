@@ -83,13 +83,6 @@ export interface AdminConfig {
     temperature: number;                 // 温度参数 0-2
     maxTokens: number;                   // 最大token数
   };
-  RecommendWeights?: {
-    wFav: number;                        // 收藏权重
-    wRecency: number;                    // 近期权重
-    wProgress: number;                   // 未看完权重
-    decayDays: number;                   // 时间衰减周期（天）
-    maxItems: number;                    // 为你推荐展示数量上限
-  };
   YouTubeConfig?: {
     enabled: boolean;                    // 是否启用YouTube搜索功能
     apiKey: string;                      // YouTube Data API v3密钥
