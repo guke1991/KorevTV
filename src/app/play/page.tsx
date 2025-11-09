@@ -4,6 +4,7 @@
 
 import Hls from 'hls.js';
 import { ChevronUp,Heart } from 'lucide-react';
+import LiquidGlassContainer from '@/components/LiquidGlassContainer';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useRef, useState } from 'react';
@@ -70,6 +71,8 @@ function PlayPageClient() {
 
   // 返回顶部按钮显示状态
   const [showBackToTop, setShowBackToTop] = useState(false);
+  // 快捷键提示开关
+  const [showShortcutHelp, setShowShortcutHelp] = useState(false);
 
   // bangumi详情状态
   const [bangumiDetails, setBangumiDetails] = useState<any>(null);
@@ -4711,6 +4714,39 @@ function PlayPageClient() {
 
         <ChevronUp className='w-6 h-6 text-white relative z-10 transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1' />
       </button>
+
+      {/* 快捷键帮助按钮（左上角） */}
+      <button
+        onClick={() => setShowShortcutHelp(true)}
+        className='fixed left-3 top-3 z-[600] w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm text-white text-sm font-bold flex items-center justify-center hover:bg-black/50 transition-all'
+        aria-label='快捷键帮助'
+      >
+        ?
+      </button>
+
+      {/* 快捷键帮助弹层 */}
+      {showShortcutHelp && (
+        <div className='fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4'>
+          <LiquidGlassContainer className='w-full max-w-sm p-4 space-y-3' roundedClass='rounded-2xl' intensity='strong' shadow='xl' border='subtle'>
+            <div className='text-base font-semibold text-gray-800 dark:text-gray-100'>播放快捷键</div>
+            <ul className='space-y-2 text-sm text-gray-700 dark:text-gray-200'>
+              <li><span className='font-semibold'>空格</span>：播放/暂停</li>
+              <li><span className='font-semibold'>← / →</span>：快退 / 快进</li>
+              <li><span className='font-semibold'>↑ / ↓</span>：音量加 / 减</li>
+              <li><span className='font-semibold'>M</span>：静音</li>
+              <li><span className='font-semibold'>F</span>：全屏</li>
+            </ul>
+            <div className='flex items-center justify-end'>
+              <button
+                onClick={() => setShowShortcutHelp(false)}
+                className='text-xs px-3 py-1 rounded-full bg-gray-700 text-white hover:bg-gray-800'
+              >
+                关闭
+              </button>
+            </div>
+          </LiquidGlassContainer>
+        </div>
+      )}
     </PageLayout>
   );
 }
