@@ -28,6 +28,9 @@ export default function WatchPartyPanel() {
   const [showQr, setShowQr] = useState(false);
   const initialSyncedRef = useRef<boolean>(false);
   const [showMore, setShowMore] = useState(false);
+  const [overlayEnabled, setOverlayEnabled] = useState(false);
+  const [overlayItems, setOverlayItems] = useState<{ id: string; text: string; left: number; top: number }[]>([]);
+  const [hostOnlyMode, setHostOnlyMode] = useState(false);
 
   useEffect(() => {
     selfIdRef.current = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -135,6 +138,28 @@ export default function WatchPartyPanel() {
             ts: data.ts || Date.now()
           };
           setMessages((prev) => [...prev.slice(-50), msg]);
+          // 表情漂浮层（仅简单识别常见emoji）
+          if (overlayEnabled) {
+            try {
+              const t = msg.text.trim();
+              const isEmoji = /[\u{1F300}-\u{1FAFF}]|👍|❤️|😂|🎉|👏/u.test(t);
+              if (isEmoji) {
+                const left = Math.floor(Math.random() * 80) + 10; // 10% - 90%
+                const top = Math.floor(Math.random() * 60) + 20; // 20% - 80%
+                const id = `ov-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+                setOverlayItems((prev) => [...prev, { id, text: t, left, top }]);
+                setTimeout(() => {
+                  setOverlayItems((prev) => prev.filter((i) => i.id !== id));
+                }, 2000);
+              }
+            } catch {}
+          }
+        } else if (data.type === 'mode') {
+          const hostOnly = Boolean(data.payload?.hostOnly);
+          setHostOnlyMode(hostOnly);
+          if (hostOnly && !createdRoomRef.current) {
+            setFollowHost(true);
+          }
         }
       } catch {}
     };
@@ -194,14 +219,17 @@ export default function WatchPartyPanel() {
     if (!v) return;
     const onPlay = () => {
       if (suppressRef.current) return;
+      if (hostOnlyMode && !createdRoomRef.current) return;
       emit('playback', { state: 'play', time: v.currentTime });
     };
     const onPause = () => {
       if (suppressRef.current) return;
+      if (hostOnlyMode && !createdRoomRef.current) return;
       emit('playback', { state: 'pause', time: v.currentTime });
     };
     const onSeeked = () => {
       if (suppressRef.current) return;
+      if (hostOnlyMode && !createdRoomRef.current) return;
       emit('playback', { state: 'seek', time: v.currentTime });
     };
     v.addEventListener('play', onPlay);
@@ -382,6 +410,27 @@ export default function WatchPartyPanel() {
               setShowMore(false);
             }
           },
+          {
+            id: 'overlay',
+            label: overlayEnabled ? '关闭表情漂浮' : '开启表情漂浮',
+            icon: <Users className='w-4 h-4 text-blue-600' />,
+            onClick: () => {
+              setOverlayEnabled((v) => !v);
+              setShowMore(false);
+            }
+          },
+          {
+            id: 'hostmode',
+            label: hostOnlyMode ? '关闭主持人模式' : '开启主持人模式',
+            icon: <Crown className='w-4 h-4 text-yellow-600' />,
+            onClick: () => {
+              const next = !hostOnlyMode;
+              setHostOnlyMode(next);
+              emit('mode', { hostOnly: next });
+              if (next && !createdRoomRef.current) setFollowHost(true);
+              setShowMore(false);
+            }
+          },
           ...(connected && !createdRoomRef.current
             ? [
                 {
@@ -397,6 +446,21 @@ export default function WatchPartyPanel() {
             : [])
         ]}
       />
+
+      {/* 社交漂浮层（全局覆盖） */}
+      {overlayEnabled && overlayItems.length > 0 && (
+        <div className='pointer-events-none fixed inset-0 z-[900]'>
+          {overlayItems.map((i) => (
+            <div
+              key={i.id}
+              style={{ left: `${i.left}%`, top: `${i.top}%` }}
+              className='absolute text-2xl select-none animate-bounce'
+            >
+              {i.text}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* 成员与聊天 */}
       <LiquidGlassContainer className='px-3 py-2' roundedClass='rounded-2xl' intensity='medium' shadow='lg' border='subtle'>
