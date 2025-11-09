@@ -1023,7 +1023,7 @@ function HomeClient() {
         onClose={() => setShowAIRecommendModal(false)}
       />
       {/* 为你推荐 / 最近热播 区块（基于 AIRecommend） */}
-      {aiEnabled && personalRecommendEnabled && (
+      {(aiEnabled === true && aiCheckTriggered && personalRecommendEnabled) && (
         <div className='mt-8 space-y-6'>
           {/* 为你推荐 */}
           <div>
