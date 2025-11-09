@@ -144,6 +144,17 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(function VideoCard
     let v = normalizeType(type || actualSearchType);
     // 兜底：番剧标记
     if (!v && isBangumi) v = 'anime';
+    // 兜底：根据上下文推断
+    if (!v) {
+      const sn = (source_name || '').toLowerCase();
+      const ttl = (actualTitle || '').toLowerCase();
+      if (sn.includes('短剧')) v = 'shortdrama';
+      else if (sn.includes('综艺') || sn.includes('show')) v = 'variety';
+      else if (sn.includes('tv') || sn.includes('电视剧')) v = 'tv';
+      else if (sn.includes('movie') || sn.includes('电影')) v = 'movie';
+      else if (/第\d+期/.test(ttl)) v = 'variety';
+      else if (/第\d+话/.test(ttl) || /(ova|sp)/i.test(ttl)) v = 'anime';
+    }
     // 兜底：按集数推断
     if (!v) {
       if (actualEpisodes && actualEpisodes > 1) v = 'tv';
