@@ -2,23 +2,23 @@
 'use client';
 
 import { Clock } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { PlayRecord } from '@/lib/db.client';
 import {
   clearAllPlayRecords,
   getAllPlayRecords,
   subscribeToDataUpdates,
-  forceRefreshPlayRecordsCache,
 } from '@/lib/db.client';
 import { getAllFavorites } from '@/lib/db.client';
 import {
+  type WatchingUpdate,
+  checkWatchingUpdates,
   getDetailedWatchingUpdates,
   subscribeToWatchingUpdatesEvent,
-  checkWatchingUpdates,
-  type WatchingUpdate,
 } from '@/lib/watching-updates';
 
+import CapsuleSwitch from '@/components/CapsuleSwitch';
 import ScrollableRow from '@/components/ScrollableRow';
 import SectionTitle from '@/components/SectionTitle';
 import VideoCard from '@/components/VideoCard';
@@ -32,9 +32,67 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
     (PlayRecord & { key: string })[]
   >([]);
   const [loading, setLoading] = useState(true);
-  const [watchingUpdates, setWatchingUpdates] = useState<WatchingUpdate | null>(null);
-  const [sortBy, setSortBy] = useState<'recent' | 'progress' | 'favorite'>('recent');
+  const [watchingUpdates, setWatchingUpdates] = useState<WatchingUpdate | null>(
+    null
+  );
+  const [sortBy, setSortBy] = useState<'recent' | 'progress' | 'favorite'>(
+    'recent'
+  );
   const [favoriteKeys, setFavoriteKeys] = useState<Set<string>>(new Set());
+  const [filterBy, setFilterBy] = useState<
+    'all' | 'updated' | 'favorite' | 'progress10'
+  >('all');
+
+  // 本地存储键
+  const CW_SORT_KEY = 'cw_sort_by';
+  const CW_FILTER_KEY = 'cw_filter_by';
+
+  // 初始加载已保存的偏好
+  useEffect(() => {
+    try {
+      const savedSort = localStorage.getItem(CW_SORT_KEY);
+      if (
+        savedSort === 'recent' ||
+        savedSort === 'progress' ||
+        savedSort === 'favorite'
+      ) {
+        setSortBy(savedSort as 'recent' | 'progress' | 'favorite');
+      }
+    } catch (err) {
+      console.debug('ContinueWatching: 读取排序偏好失败', err);
+    }
+    try {
+      const savedFilter = localStorage.getItem(CW_FILTER_KEY);
+      if (
+        savedFilter === 'all' ||
+        savedFilter === 'updated' ||
+        savedFilter === 'favorite' ||
+        savedFilter === 'progress10'
+      ) {
+        setFilterBy(
+          savedFilter as 'all' | 'updated' | 'favorite' | 'progress10'
+        );
+      }
+    } catch (err) {
+      console.debug('ContinueWatching: 读取筛选偏好失败', err);
+    }
+  }, []);
+
+  // 变更时写入本地存储
+  useEffect(() => {
+    try {
+      localStorage.setItem(CW_SORT_KEY, sortBy);
+    } catch (err) {
+      console.debug('ContinueWatching: 写入排序偏好失败', err);
+    }
+  }, [sortBy]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(CW_FILTER_KEY, filterBy);
+    } catch (err) {
+      console.debug('ContinueWatching: 写入筛选偏好失败', err);
+    }
+  }, [filterBy]);
 
   // 处理播放记录数据更新的函数
   const updatePlayRecords = (allRecords: Record<string, PlayRecord>) => {
@@ -65,7 +123,9 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
           const favs = await getAllFavorites();
           const favSet = new Set(Object.keys(favs || {}));
           setFavoriteKeys(favSet);
-        } catch {}
+        } catch (err) {
+          console.debug('ContinueWatching: 获取收藏失败', err);
+        }
       } catch (error) {
         console.error('获取播放记录失败:', error);
         setPlayRecords([]);
@@ -145,10 +205,7 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
     };
   }, [loading, playRecords.length]); // 依赖播放记录加载状态
 
-  // 如果没有播放记录，则不渲染组件
-  if (!loading && playRecords.length === 0) {
-    return null;
-  }
+  const hasRecords = !loading && playRecords.length > 0;
 
   // 计算播放进度百分比
   const getProgress = (record: PlayRecord) => {
@@ -156,9 +213,22 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
     return (record.play_time / record.total_time) * 100;
   };
 
-  // 派生排序后的记录
+  // 过滤后的记录
+  const filteredRecords = useMemo(() => {
+    let arr = [...playRecords];
+    if (filterBy === 'updated') {
+      arr = arr.filter((r) => getNewEpisodesCount(r) > 0);
+    } else if (filterBy === 'favorite') {
+      arr = arr.filter((r) => favoriteKeys.has(r.key));
+    } else if (filterBy === 'progress10') {
+      arr = arr.filter((r) => getProgress(r) >= 10);
+    }
+    return arr;
+  }, [playRecords, filterBy, favoriteKeys, getNewEpisodesCount]);
+
+  // 排序后的记录
   const sortedRecords = useMemo(() => {
-    const arr = [...playRecords];
+    const arr = [...filteredRecords];
     if (sortBy === 'recent') {
       return arr.sort((a, b) => b.save_time - a.save_time);
     }
@@ -172,7 +242,7 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
       if (af !== bf) return bf - af;
       return b.save_time - a.save_time;
     });
-  }, [playRecords, sortBy, favoriteKeys]);
+  }, [filteredRecords, sortBy, favoriteKeys]);
 
   // 从 key 中解析 source 和 id
   const parseKey = (key: string) => {
@@ -181,31 +251,37 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
   };
 
   // 检查播放记录是否有新集数更新
-  const getNewEpisodesCount = (record: PlayRecord & { key: string }): number => {
-    if (!watchingUpdates || !watchingUpdates.updatedSeries) return 0;
+  const getNewEpisodesCount = useCallback(
+    (record: PlayRecord & { key: string }): number => {
+      if (!watchingUpdates || !watchingUpdates.updatedSeries) return 0;
 
-    const { source, id } = parseKey(record.key);
+      const { source, id } = parseKey(record.key);
 
-    // 在watchingUpdates中查找匹配的剧集
-    const matchedSeries = watchingUpdates.updatedSeries.find(series =>
-      series.sourceKey === source &&
-      series.videoId === id &&
-      series.hasNewEpisode
-    );
+      // 在watchingUpdates中查找匹配的剧集
+      const matchedSeries = watchingUpdates.updatedSeries.find(
+        (series) =>
+          series.sourceKey === source &&
+          series.videoId === id &&
+          series.hasNewEpisode
+      );
 
-    return matchedSeries ? (matchedSeries.newEpisodes || 0) : 0;
-  };
+      return matchedSeries ? matchedSeries.newEpisodes || 0 : 0;
+    },
+    [watchingUpdates]
+  );
 
   // 获取最新的总集数（用于显示，不修改原始数据）
-  const getLatestTotalEpisodes = (record: PlayRecord & { key: string }): number => {
-    if (!watchingUpdates || !watchingUpdates.updatedSeries) return record.total_episodes;
+  const getLatestTotalEpisodes = (
+    record: PlayRecord & { key: string }
+  ): number => {
+    if (!watchingUpdates || !watchingUpdates.updatedSeries)
+      return record.total_episodes;
 
     const { source, id } = parseKey(record.key);
 
     // 在watchingUpdates中查找匹配的剧集
-    const matchedSeries = watchingUpdates.updatedSeries.find(series =>
-      series.sourceKey === source &&
-      series.videoId === id
+    const matchedSeries = watchingUpdates.updatedSeries.find(
+      (series) => series.sourceKey === source && series.videoId === id
     );
 
     // 如果找到匹配的剧集且有最新集数信息，返回最新集数；否则返回原始集数
@@ -214,28 +290,69 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
       : record.total_episodes;
   };
 
-  return (
+  return hasRecords ? (
     <section className={`mb-8 ${className || ''}`}>
       <div className='mb-4 flex items-center justify-between'>
-        <SectionTitle title="继续观看" icon={Clock} iconColor="text-green-500" />
-        <div className='flex items-center gap-3'>
-          {/* 排序选择 */}
-          {!loading && playRecords.length > 0 && (
-            <div className='flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300'>
-              <span>排序:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className='text-xs px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white/80 dark:bg-gray-800/60'
-              >
-                <option value='recent'>最近</option>
-                <option value='progress'>进度高</option>
-                <option value='favorite'>收藏优先</option>
-              </select>
+        <SectionTitle
+          title='继续观看'
+          icon={Clock}
+          iconColor='text-green-500'
+        />
+        {hasRecords && (
+          <div className='flex items-center gap-3'>
+            {/* 摘要统计 */}
+            <div className='text-xs text-gray-600 dark:text-gray-300'>
+              共 {playRecords.length} 条 · 有更新{' '}
+              {playRecords.filter((r) => getNewEpisodesCount(r) > 0).length} 条
             </div>
-          )}
-          {/* 清空按钮 */}
-          {!loading && playRecords.length > 0 && (
+            {/* 当前偏好提示 */}
+            {(() => {
+              const filterLabelMap: Record<string, string> = {
+                all: '全部',
+                updated: '有更新',
+                favorite: '收藏',
+                progress10: '进度≥10%',
+              };
+              const sortLabelMap: Record<string, string> = {
+                recent: '最近',
+                progress: '进度高',
+                favorite: '收藏优先',
+              };
+              return (
+                <div className='text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200'>
+                  偏好：筛选 {filterLabelMap[filterBy]} · 排序{' '}
+                  {sortLabelMap[sortBy]}
+                </div>
+              );
+            })()}
+            {/* 筛选 */}
+            <CapsuleSwitch
+              options={[
+                { label: '全部', value: 'all' },
+                { label: '有更新', value: 'updated' },
+                { label: '收藏', value: 'favorite' },
+                { label: '进度≥10%', value: 'progress10' },
+              ]}
+              active={filterBy}
+              onChange={(val) =>
+                setFilterBy(
+                  val as 'all' | 'updated' | 'favorite' | 'progress10'
+                )
+              }
+            />
+            {/* 排序 */}
+            <CapsuleSwitch
+              options={[
+                { label: '最近', value: 'recent' },
+                { label: '进度高', value: 'progress' },
+                { label: '收藏优先', value: 'favorite' },
+              ]}
+              active={sortBy}
+              onChange={(val) =>
+                setSortBy(val as 'recent' | 'progress' | 'favorite')
+              }
+            />
+            {/* 清空按钮 */}
             <button
               className='text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors'
               onClick={async () => {
@@ -245,8 +362,8 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
             >
               清空
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
       <ScrollableRow>
         {loading
@@ -303,15 +420,22 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
                   )}
                   {/* 上次观看时间与进度/集数提示 */}
                   <div className='mt-1 text-[11px] text-gray-600 dark:text-gray-400'>
-                    上次观看：{new Date(record.save_time).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    上次观看：
+                    {new Date(record.save_time).toLocaleString('zh-CN', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </div>
                   <div className='text-[11px] text-gray-600 dark:text-gray-400'>
-                    进度：{Math.round(getProgress(record))}% · 第{Math.max(0, record.index)}/{latestTotalEpisodes}集
+                    进度：{Math.round(getProgress(record))}% · 第
+                    {Math.max(0, record.index)}/{latestTotalEpisodes}集
                   </div>
                 </div>
               );
             })}
       </ScrollableRow>
     </section>
-  );
+  ) : null;
 }
