@@ -1,6 +1,6 @@
+import { Children, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import LiquidGlassContainer from '@/components/LiquidGlassContainer';
-import { Children, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import AnimatedCardGrid from '@/components/AnimatedCardGrid';
 
@@ -118,6 +118,15 @@ function ScrollableRow({
         ref={containerRef}
         className='flex space-x-6 overflow-x-auto scrollbar-hide py-1 sm:py-2 pb-12 sm:pb-14 px-4 sm:px-6'
         onScroll={checkScroll}
+        onWheel={(e) => {
+          const el = containerRef.current;
+          if (!el) return;
+          const delta = e.deltaY || 0;
+          if (Math.abs(delta) > 0) {
+            e.preventDefault();
+            el.scrollLeft += delta;
+          }
+        }}
       >
         {enableAnimation ? (
           <AnimatedCardGrid className="flex space-x-6">

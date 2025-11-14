@@ -2,9 +2,9 @@
 
 'use client';
 
-import { Brain, Calendar, ChevronRight, Film, Play,Sparkles, Tv } from 'lucide-react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Brain, Calendar, ChevronRight, Film, Play, Sparkles, Tv } from 'lucide-react';
 import Link from 'next/link';
-import { Suspense, useCallback,useEffect, useState } from 'react';
 
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import {
@@ -311,7 +311,7 @@ function HomeClient() {
                 if (detailsRes.code === 200 && detailsRes.data?.plot_summary) {
                   setHotVarietyShows(prev =>
                     prev.map(s => s.id === show.id
-                      ? { ...s, plot_summary: detailsRes.data!.plot_summary }
+                      ? { ...s, plot_summary: detailsRes.data?.plot_summary || s.plot_summary }
                       : s
                     )
                   );
@@ -470,21 +470,18 @@ function HomeClient() {
     // 每30分钟自动刷新一次（页面可见时）
     const refreshMs = ROTATION_TTL_MINUTES * 60 * 1000;
     const timer = setInterval(() => {
-      try {
-        if (typeof document === 'undefined' || document.visibilityState !== 'visible') return;
-        // 轮换种子递增，使展示条目切换，并持久化到本地存储
-        setRotationSeed((prev) => {
-          const next = (prev + 1) % 1000000;
-          try {
-            localStorage.setItem('home_rotation_seed', String(next));
-            localStorage.setItem('home_rotation_seed_ts', String(Date.now()));
-          } catch {}
-          return next;
-        });
-        fetchRecommendData();
-      } catch (e) {
-        // 忽略定时刷新错误，避免影响页面
-      }
+      if (typeof document === 'undefined' || document.visibilityState !== 'visible') return;
+      setRotationSeed((prev) => {
+        const next = (prev + 1) % 1000000;
+        try {
+          localStorage.setItem('home_rotation_seed', String(next));
+          localStorage.setItem('home_rotation_seed_ts', String(Date.now()));
+        } catch {
+          void 0;
+        }
+        return next;
+      });
+      fetchRecommendData();
     }, refreshMs);
     return () => clearInterval(timer);
   }, [fetchRecommendData]);
@@ -695,23 +692,10 @@ function HomeClient() {
           ) : (
             // 首页视图
             <>
-              {(() => {
-                // 轮换选择方法：根据种子按偏移挑选固定数量的条目（环形）
-                const pickFrom = <T,>(arr: T[], count: number, seed: number): T[] => {
-                  if (!Array.isArray(arr) || arr.length === 0 || count <= 0) return [];
-                  if (arr.length <= count) return arr.slice(0, count);
-                  const start = seed % arr.length;
-                  const result: T[] = [];
-                  for (let i = 0; i < count; i++) {
-                    result.push(arr[(start + i) % arr.length]);
-                  }
-                  return result;
-                };
-                return null;
-              })()}
+              {null}
               {/* Hero Banner 轮播 */}
               {!loading && (hotMovies.length > 0 || hotTvShows.length > 0 || hotVarietyShows.length > 0 || hotShortDramas.length > 0) && (
-                <section className='mb-8'>
+                <section className='mb-8 home-section'>
                   <HeroBanner
                     items={[
                       // 豆瓣电影
@@ -831,6 +815,11 @@ function HomeClient() {
                   />
                 </section>
               )}
+              {loading && (
+                <section className='mb-8 home-section'>
+                  <div className='w-full h-[320px] sm:h-[360px] md:h-[300px] rounded-2xl border border-white/20 dark:border-gray-700/50 bg-white/60 dark:bg-gray-800/50 backdrop-blur-md shadow-[0_12px_36px_rgba(0,0,0,0.15)] animate-pulse'></div>
+                </section>
+              )}
 
               {/* 继续观看已移至中间页 */}
 
@@ -885,7 +874,7 @@ function HomeClient() {
               )}
 
               {/* 热门电影 */}
-              <section className='mb-8'>
+              <section className='mb-8 home-section'>
                 <div className='mb-4 flex items-center justify-between'>
                   <SectionTitle title="热门电影" icon={Film} iconColor="text-red-500" />
                   <Link
@@ -923,7 +912,7 @@ function HomeClient() {
               </section>
 
               {/* 热门剧集 */}
-              <section className='mb-8'>
+              <section className='mb-8 home-section'>
                 <div className='mb-4 flex items-center justify-between'>
                   <SectionTitle title="热门剧集" icon={Tv} iconColor="text-blue-500" />
                   <Link
@@ -961,7 +950,7 @@ function HomeClient() {
               </section>
 
               {/* 每日新番放送 */}
-              <section className='mb-8'>
+              <section className='mb-8 home-section'>
                 <div className='mb-4 flex items-center justify-between'>
                   <SectionTitle title="新番放送" icon={Calendar} iconColor="text-purple-500" />
                   <Link
@@ -1027,7 +1016,7 @@ function HomeClient() {
               </section>
 
               {/* 热门综艺 */}
-              <section className='mb-8'>
+              <section className='mb-8 home-section'>
                 <div className='mb-4 flex items-center justify-between'>
                   <SectionTitle title="热门综艺" icon={Sparkles} iconColor="text-pink-500" />
                   <Link
@@ -1231,7 +1220,7 @@ function HomeClient() {
                 onChange={(val: string) => {
                   const enabled = val === 'on';
                   setPersonalRecommendEnabled(enabled);
-                  try { localStorage.setItem('personalRecommendEnabled', String(enabled)); } catch {}
+                  try { localStorage.setItem('personalRecommendEnabled', String(enabled)); } catch { void 0; }
                 }}
               />
             </div>
@@ -1249,6 +1238,20 @@ function HomeClient() {
           <span className='hidden sm:inline text-sm font-semibold'>AI 助手</span>
         </button>
       </div>
+      <style jsx>{`
+        .home-section {
+          border-radius: 16px;
+          border: 1px solid rgba(255,255,255,0.2);
+          background: rgba(255,255,255,0.7);
+          backdrop-filter: saturate(180%) blur(12px);
+          box-shadow: 0 12px 36px rgba(0,0,0,0.15);
+          padding: 12px;
+        }
+        :global(html.dark) .home-section {
+          border-color: rgba(55,65,81,0.6);
+          background: rgba(31,41,55,0.6);
+        }
+      `}</style>
     </PageLayout>
   );
 }
