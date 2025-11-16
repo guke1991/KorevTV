@@ -507,19 +507,27 @@ html.dark .lgx-tint-pink {
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.22) 45%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.22) 55%, transparent 65%);
-  background-size: 220% 100%;
-  transform: translateZ(0);
+  /* 更接近卡片的细窄扫光 */
+  background: linear-gradient(
+    110deg,
+    transparent 48%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.35) 51%,
+    rgba(255, 255, 255, 0.12) 52%,
+    transparent 54%
+  );
+  background-size: 180% 100%;
+  filter: blur(2px);
   opacity: 0;
-  transition: opacity 200ms ease, filter 200ms ease;
+  transition: opacity 180ms ease;
 }
 .group:hover .scan-sweep,
 .scan-sweep.hover {
-  opacity: 1;
-  animation: scan-sweep-move 2.2s ease-in-out infinite;
+  opacity: 0.25;
+  animation: scan-sweep-move 1.8s ease-in-out infinite;
 }
 @keyframes scan-sweep-move {
-  0% { background-position: -120% 0; }
-  50% { background-position: 120% 0; }
-  100% { background-position: -120% 0; }
+  0% { background-position: -110% 0; }
+  50% { background-position: 110% 0; }
+  100% { background-position: -110% 0; }
 }
