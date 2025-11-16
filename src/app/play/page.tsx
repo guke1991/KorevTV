@@ -5675,28 +5675,13 @@ function PlayPageClient() {
                                 <span key={index}>{language}</span>
                               ))}
                           {movieDetails.episodes && (
-                            <span className='relative group bg-gradient-to-r from-green-500/90 to-emerald-500/90 dark:from-green-600/90 dark:to-emerald-600/90 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md hover:shadow-lg hover:shadow-green-500/30 transition-all duration-300 hover:scale-105'>
-                              <span className='absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full opacity-0 group-hover:opacity-20 blur transition-opacity duration-300'></span>
-                              <span className='relative'>
-                                共{movieDetails.episodes}集
-                              </span>
-                            </span>
+                            <span className='chips-unify'>共{movieDetails.episodes}集</span>
                           )}
                           {movieDetails.episode_length && (
-                            <span className='relative group bg-gradient-to-r from-orange-500/90 to-amber-500/90 dark:from-orange-600/90 dark:to-amber-600/90 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md hover:shadow-lg hover:shadow-orange-500/30 transition-all duration-300 hover:scale-105'>
-                              <span className='absolute inset-0 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full opacity-0 group-hover:opacity-20 blur transition-opacity duration-300'></span>
-                              <span className='relative'>
-                                单集{movieDetails.episode_length}分钟
-                              </span>
-                            </span>
+                            <span className='chips-unify'>单集{movieDetails.episode_length}分钟</span>
                           )}
                           {movieDetails.movie_duration && (
-                            <span className='relative group bg-gradient-to-r from-red-500/90 to-rose-500/90 dark:from-red-600/90 dark:to-rose-600/90 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md hover:shadow-lg hover:shadow-red-500/30 transition-all duration-300 hover:scale-105'>
-                              <span className='absolute inset-0 bg-gradient-to-r from-red-400 to-rose-400 rounded-full opacity-0 group-hover:opacity-20 blur transition-opacity duration-300'></span>
-                              <span className='relative'>
-                                {movieDetails.movie_duration}分钟
-                              </span>
-                            </span>
+                            <span className='chips-unify'>{movieDetails.movie_duration}分钟</span>
                           )}
                         </div>
                       </div>
