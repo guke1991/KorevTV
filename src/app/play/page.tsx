@@ -5917,6 +5917,7 @@ function PlayPageClient() {
           display: inline-flex;
           align-items: center;
           backdrop-filter: saturate(180%) blur(10px);
+          transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
         }
         :global(html.dark) .chips-unify span {
           background: rgba(255, 255, 255, 0.08);
@@ -5924,7 +5925,9 @@ function PlayPageClient() {
           border-color: rgba(255, 255, 255, 0.2);
         }
         .chips-unify span:hover {
-          filter: brightness(1.05);
+          filter: brightness(1.06);
+          transform: translateY(-1px) scale(1.03);
+          box-shadow: 0 6px 14px rgba(0,0,0,0.12);
         }
       `}</style>
       <button
