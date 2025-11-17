@@ -5394,7 +5394,6 @@ function PlayPageClient() {
                       className='group relative flex-shrink-0 transition-all duration-300 hover:scale-110'
                       title='收藏此影片'
                     >
-                      <div className='absolute inset-0 bg-gradient-to-r from-red-400 to-pink-400 rounded-full opacity-0 group-hover:opacity-20 blur-lg transition-opacity duration-300'></div>
                       <FavoriteIcon filled={favorited} />
                       <span className='ml-1 text-xs text-gray-700 dark:text-gray-300 hidden sm:inline'>
                         收藏
@@ -5572,7 +5571,6 @@ function PlayPageClient() {
                               ))}
                           {bangumiDetails.total_episodes && (
                             <span className='relative group bg-gradient-to-r from-green-500/90 to-emerald-500/90 dark:from-green-600/90 dark:to-emerald-600/90 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md hover:shadow-lg hover:shadow-green-500/30 transition-all duration-300 hover:scale-105'>
-                              <span className='absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full opacity-0 group-hover:opacity-20 blur transition-opacity duration-300'></span>
                               <span className='relative'>
                                 共{bangumiDetails.total_episodes}话
                               </span>
@@ -5744,17 +5742,14 @@ function PlayPageClient() {
                     {detail?.episodes && detail.episodes.length > 0 && (
                       <div className='flex flex-wrap gap-2 chips-unify'>
                         <span className='relative group bg-gradient-to-r from-blue-500/90 to-indigo-500/90 dark:from-blue-600/90 dark:to-indigo-600/90 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-105'>
-                          <span className='absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full opacity-0 group-hover:opacity-20 blur transition-opacity duration-300'></span>
                           <span className='relative'>
                             共{detail.episodes.length}集
                           </span>
                         </span>
                         <span className='relative group bg-gradient-to-r from-green-500/90 to-emerald-500/90 dark:from-green-600/90 dark:to-emerald-600/90 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md hover:shadow-lg hover:shadow-green-500/30 transition-all duration-300 hover:scale-105'>
-                          <span className='absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full opacity-0 group-hover:opacity-20 blur transition-opacity duration-300'></span>
                           <span className='relative'>短剧</span>
                         </span>
                         <span className='relative group bg-gradient-to-r from-purple-500/90 to-pink-500/90 dark:from-purple-600/90 dark:to-pink-600/90 text-white px-3 py-1 rounded-full text-xs font-medium shadow-md hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-300 hover:scale-105'>
-                          <span className='absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-0 group-hover:opacity-20 blur transition-opacity duration-300'></span>
                           <span className='relative'>{detail.year}年</span>
                         </span>
                       </div>
