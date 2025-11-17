@@ -260,6 +260,7 @@ function LoginPageClient() {
         intensity='high'
         border='subtle'
         shadow='xl'
+        animated={false}
         animatedMode='hover'
         tint='blue'
       >
@@ -353,7 +354,6 @@ function LoginPageClient() {
             }
             className='group relative inline-flex w-full justify-center items-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 py-3.5 text-base font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-green-500/40 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-lg overflow-hidden'
           >
-            <span className='absolute inset-0 w-full h-full bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000' />
             <Lock className='h-5 w-5' />
             {loading ? '登录中...' : '立即登录'}
           </button>
@@ -418,7 +418,6 @@ function LoginPageClient() {
               disabled={telegramLoading || !telegramUsername.trim()}
               className='group relative inline-flex w-full justify-center items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/40 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-lg overflow-hidden'
             >
-              <span className='absolute inset-0 w-full h-full bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000' />
               <Send className='h-5 w-5' />
               {telegramLoading ? '正在打开 Telegram...' : '通过 Telegram 登录'}
             </button>
