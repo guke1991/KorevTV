@@ -129,12 +129,13 @@ function ScrollableRow({
       </div>
       {showLeftScroll && (
         <div
-          className={`hidden sm:flex absolute left-0 top-0 bottom-0 w-16 items-center justify-center z-[600] transition-opacity duration-200 ${
+          className={`hidden sm:flex absolute left-0 top-0 bottom-0 w-16 items-center justify-center z-[9999] transition-opacity duration-200 ${
             isHovered ? 'opacity-100' : 'opacity-0'
           }`}
           style={{
             background: 'transparent',
-            pointerEvents: 'none', // 允许点击穿透
+            pointerEvents: 'none',
+            zIndex: 2147483647,
           }}
         >
           <div
@@ -166,12 +167,13 @@ function ScrollableRow({
 
       {showRightScroll && (
         <div
-          className={`hidden sm:flex absolute right-0 top-0 bottom-0 w-16 items-center justify-center z-[600] transition-opacity duration-200 ${
+          className={`hidden sm:flex absolute right-0 top-0 bottom-0 w-16 items-center justify-center z-[9999] transition-opacity duration-200 ${
             isHovered ? 'opacity-100' : 'opacity-0'
           }`}
           style={{
             background: 'transparent',
-            pointerEvents: 'none', // 允许点击穿透
+            pointerEvents: 'none',
+            zIndex: 2147483647,
           }}
         >
           <div
