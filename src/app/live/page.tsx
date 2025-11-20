@@ -2296,18 +2296,18 @@ function LivePageClient() {
             />
           </div>
         )}
+        <style jsx>{`
+          .group:hover .marquee-item {
+            animation: marquee-left 6s linear infinite;
+          }
+          @keyframes marquee-left {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
+          }
+        `}</style>
       </div>
     </PageLayout>
-    <style jsx>{`
-      .group:hover .marquee-item {
-        animation: marquee-left 6s linear infinite;
-      }
-      @keyframes marquee-left {
-        0% { transform: translateX(0); }
-        50% { transform: translateX(-50%); }
-        100% { transform: translateX(0); }
-      }
-    `}</style>
   );
 }
 

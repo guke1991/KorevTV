@@ -1275,7 +1275,6 @@ function HomeClient() {
           <span className='hidden sm:inline text-sm font-semibold'>AI 助手</span>
         </button>
       </div>
-      <style jsx></style>
     </PageLayout>
   );
 }
