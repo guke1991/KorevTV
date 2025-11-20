@@ -1107,7 +1107,7 @@ function HomeClient() {
 
               {/* 热门短剧 */}
               <section className='mb-8'>
-                <LiquidGlassContainer roundedClass='rounded-2xl' intensity='high' shadow='xl' border='subtle' animatedMode='hover' tint='blue'>
+                <LiquidGlassContainer roundedClass='rounded-2xl' intensity='high' shadow='xl' border='subtle' animated={false} tint='blue'>
                 <div className='mb-4 flex items-center justify-between'>
                   <SectionTitle title="热门短剧" icon={Play} iconColor="text-orange-500" />
                   <Link

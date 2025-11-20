@@ -5480,8 +5480,7 @@ function PlayPageClient() {
                               <span className='font-semibold text-gray-700 dark:text-gray-300'>
                                 Bangumi评分:{' '}
                               </span>
-                              <div className='flex items-center group relative overflow-hidden'>
-                                <span aria-hidden className='title-sweep rounded-md' />
+                              <div className='flex items-center'>
                                 <span className='relative text-transparent bg-clip-text bg-gradient-to-r from-pink-600 via-rose-600 to-pink-600 dark:from-pink-400 dark:via-rose-400 dark:to-pink-400 font-bold text-lg transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_2px_8px_rgba(236,72,153,0.5)]'>
                                   {bangumiDetails.rating.score}
                                 </span>
@@ -5586,8 +5585,7 @@ function PlayPageClient() {
                               <span className='font-semibold text-gray-700 dark:text-gray-300'>
                                 豆瓣评分:{' '}
                               </span>
-                              <div className='flex items-center group relative overflow-hidden'>
-                                <span aria-hidden className='title-sweep rounded-md' />
+                              <div className='flex items-center'>
                                 <span className='relative text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 via-amber-600 to-yellow-600 dark:from-yellow-400 dark:via-amber-400 dark:to-yellow-400 font-bold text-lg transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_2px_8px_rgba(251,191,36,0.5)]'>
                                   {movieDetails.rate}
                                 </span>
