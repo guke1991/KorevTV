@@ -288,7 +288,7 @@
 
 Kvrocks 是基于 RocksDB 的持久化 Redis 协议兼容存储，推荐用于生产环境。
 
-```yml
+```
 services:
   korevtv-core:
     image: ghcr.io/korean032/korevtv:latest
@@ -330,7 +330,7 @@ volumes:
 
 Redis 默认配置可能导致数据丢失，需要开启持久化。
 
-```yml
+```
 services:
   korevtv-core:
     image: ghcr.io/korean032/korevtv:latest
@@ -371,7 +371,7 @@ networks:
 2. 复制 **HTTPS ENDPOINT** 和 **TOKEN**
 3. 使用以下配置：
 
-```yml
+```
 services:
   korevtv-core:
     image: ghcr.io/korean032/korevtv:latest
@@ -591,7 +591,7 @@ Zeabur 是一站式云端部署平台，使用预构建的 Docker 镜像可以�
 
 ### 📝 配置文件格式
 
-```json
+```
 {
   "cache_time": 7200,
   "api_site": {
@@ -672,6 +672,16 @@ Zeabur 是一站式云端部署平台，使用预构建的 Docker 镜像可以�
 | `NEXT_PUBLIC_DOUBAN_IMAGE_PROXY`      | 自定义图片代理   | 空       | URL prefix                                                                              |
 | `NEXT_PUBLIC_DISABLE_YELLOW_FILTER`   | 关闭色情内容过滤 | `false`  | `true` / `false`                                                                        |
 | `NEXT_PUBLIC_FLUID_SEARCH`            | 流式搜索输出     | `true`   | `true` / `false`                                                                        |
+
+### 分享链接注册配置
+
+通过配置环境变量，可以实现通过分享链接自动注册并登录用户的功能。每个分享链接对应一个预设的账号密码。
+
+| 变量                     | 说明                     | 格式              | 示例值                     |
+| ------------------------ | ------------------------ | ----------------- | -------------------------- |
+| `SHARE_KEY_{KEY}`        | 分享链接对应的账号密码   | `username:password` | `SHARE_KEY_INVITE1=user1:pass1` |
+
+例如，如果设置了环境变量 `SHARE_KEY_INVITE1=user1:pass1`，那么用户可以通过访问 `/api/share-register?key=invite1` 来自动注册并登录账号 `user1`，密码为 `pass1`。
 
 ### 豆瓣代理说明
 
@@ -833,7 +843,7 @@ Zeabur 是一站式云端部署平台，使用预构建的 Docker 镜像可以�
 
 [Watchtower](https://github.com/containrrr/watchtower) 可自动检测并更新 Docker 容器到最新镜像。
 
-```yml
+```
 services:
   watchtower:
     image: containrrr/watchtower
@@ -1008,6 +1018,43 @@ services:
 © 2025 KorevTV & Contributors
 
 基于 [MoonTV](https://github.com/MoonTechLab/LunaTV) 进行二次开发。
+
+---
+
+## 📲 分享链接注册功能
+
+### 功能说明
+
+通过配置环境变量，可以实现通过分享链接自动注册并登录用户的功能。每个分享链接对应一个预设的账号密码，方便站长快速邀请新用户。
+
+### 配置方法
+
+在环境变量中添加以下配置：
+
+```
+# 分享链接注册配置
+# 格式：SHARE_KEY_{KEY}=username:password
+# 例如：
+SHARE_KEY_INVITE1=user1:pass1
+SHARE_KEY_INVITE2=user2:pass2
+```
+
+### 使用方法
+
+用户可以通过访问以下链接实现自动注册并登录：
+
+```
+https://your-domain.com/api/share-register?key=invite1
+```
+
+系统将自动为用户注册账号 `user1` 并使用密码 `pass1` 登录。
+
+### 注意事项
+
+1. 分享链接的 key 不区分大小写（系统会自动转换为大写）
+2. 每个分享链接只能对应一个固定的账号密码
+3. 如果用户已经存在，则直接登录而不重新注册
+4. 该功能受管理员注册设置控制，如果关闭了用户注册功能则无法使用
 
 ---
 
