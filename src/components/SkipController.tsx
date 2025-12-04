@@ -66,7 +66,7 @@ export default function SkipController({
         ? localStorage.getItem('enableAutoNextEpisode')
         : null;
     const userAutoSkip =
-      savedEnableAutoSkip !== null ? JSON.parse(savedEnableAutoSkip) : true;
+      savedEnableAutoSkip !== null ? JSON.parse(savedEnableAutoSkip) : false;
     const userAutoNextEpisode =
       savedEnableAutoNextEpisode !== null
         ? JSON.parse(savedEnableAutoNextEpisode)
@@ -94,7 +94,7 @@ export default function SkipController({
         'enableAutoNextEpisode'
       );
       const userAutoSkip =
-        savedEnableAutoSkip !== null ? JSON.parse(savedEnableAutoSkip) : true;
+        savedEnableAutoSkip !== null ? JSON.parse(savedEnableAutoSkip) : false;
       const userAutoNextEpisode =
         savedEnableAutoNextEpisode !== null
           ? JSON.parse(savedEnableAutoNextEpisode)
@@ -896,7 +896,7 @@ export default function SkipController({
       'enableAutoNextEpisode'
     );
     const userAutoSkip =
-      savedEnableAutoSkip !== null ? JSON.parse(savedEnableAutoSkip) : true;
+      savedEnableAutoSkip !== null ? JSON.parse(savedEnableAutoSkip) : false;
     const userAutoNextEpisode =
       savedEnableAutoNextEpisode !== null
         ? JSON.parse(savedEnableAutoNextEpisode)
@@ -1014,7 +1014,7 @@ export default function SkipController({
       'enableAutoNextEpisode'
     );
     const userAutoSkip =
-      savedEnableAutoSkip !== null ? JSON.parse(savedEnableAutoSkip) : true;
+      savedEnableAutoSkip !== null ? JSON.parse(savedEnableAutoSkip) : false;
     const userAutoNextEpisode =
       savedEnableAutoNextEpisode !== null
         ? JSON.parse(savedEnableAutoNextEpisode)
