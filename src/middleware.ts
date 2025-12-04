@@ -196,6 +196,7 @@ function shouldSkipAuth(pathname: string): boolean {
     '/logo.png',
     '/screenshot.png',
     '/api/telegram/', // Telegram API 端点
+    '/api/share-register', // 分享链接注册端点
   ];
 
   return skipPaths.some((path) => pathname.startsWith(path));
@@ -204,6 +205,6 @@ function shouldSkipAuth(pathname: string): boolean {
 // 配置middleware匹配规则
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|login|register|warning|api/login|api/register|api/logout|api/cron|api/server-config|api/tvbox|api/live/merged|api/parse|api/bing-wallpaper|api/proxy/spider.jar|api/telegram/).*)',
+    '/((?!_next/static|_next/image|favicon.ico|login|register|warning|api/login|api/register|api/share-register|api/logout|api/cron|api/server-config|api/tvbox|api/live/merged|api/parse|api/bing-wallpaper|api/proxy/spider.jar|api/telegram/).*)',
   ],
 };
