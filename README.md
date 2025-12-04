@@ -680,8 +680,11 @@ Zeabur 是一站式云端部署平台，使用预构建的 Docker 镜像可以�
 | 变量                     | 说明                     | 格式              | 示例值                     |
 | ------------------------ | ------------------------ | ----------------- | -------------------------- |
 | `SHARE_KEY_{KEY}`        | 分享链接对应的账号密码   | `username:password` | `SHARE_KEY_INVITE1=user1:pass1` |
+| `SITE_BASE`              | 站点基础URL              | URL               | `https://your-domain.com`  |
 
-例如，如果设置了环境变量 `SHARE_KEY_INVITE1=user1:pass1`，那么用户可以通过访问 `/api/share-register?key=invite1` 来自动注册并登录账号 `user1`，密码为 `pass1`。
+例如，如果设置了环境变量 `SHARE_KEY_INVITE1=user1:pass1` 和 `SITE_BASE=https://your-domain.com`，那么用户可以通过访问 `https://your-domain.com/api/share-register?key=invite1` 来自动注册并登录账号 `user1`，密码为 `pass1`。
+
+> 注意：SITE_BASE 环境变量对于分享链接注册功能非常重要，它决定了注册成功后重定向的地址。如果未设置，系统将默认使用 `http://localhost:3000`。
 
 ### 豆瓣代理说明
 

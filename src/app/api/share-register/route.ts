@@ -1,13 +1,18 @@
 /* eslint-disable no-console,@typescript-eslint/no-explicit-any */
+// @ts-ignore
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getConfig, clearConfigCache } from '@/lib/config';
 import { db } from '@/lib/db';
 
+// 强制使用动态渲染，避免静态优化
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 // 读取存储类型环境变量，默认 localstorage
 const STORAGE_TYPE =
+  // @ts-ignore
   (process.env.NEXT_PUBLIC_STORAGE_TYPE as
     | 'localstorage'
     | 'redis'
@@ -79,6 +84,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // @ts-ignore
     const { searchParams } = new URL(req.url);
     const shareKey = searchParams.get('key');
 
@@ -153,7 +159,10 @@ export async function GET(req: NextRequest) {
       }
 
       // 自动登录
-      const response = NextResponse.redirect(new URL('/', req.url));
+      // 使用环境变量中的SITE_BASE或者默认值来构造重定向URL
+      // @ts-ignore
+      const siteBase = process.env.SITE_BASE || 'http://localhost:3000';
+      const response = NextResponse.redirect(new URL('/', siteBase));
       
       const cookieValue = await generateAuthCookie(
         username,
