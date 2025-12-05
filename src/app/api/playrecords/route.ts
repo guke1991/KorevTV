@@ -113,6 +113,14 @@ export async function POST(request: NextRequest) {
 
     await db.savePlayRecord(authInfo.username, source, id, finalRecord);
 
+    // 保存永久观影记录
+    try {
+      await db.addPermanentPlayRecord(authInfo.username, finalRecord);
+    } catch (permErr) {
+      console.warn('保存永久观影记录失败:', permErr);
+      // 不影响主流程
+    }
+
     // 更新播放统计（如果存储类型支持）
     if (db.isStatsSupported()) {
       await db.updatePlayStatistics(

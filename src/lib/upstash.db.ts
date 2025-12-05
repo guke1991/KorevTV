@@ -230,6 +230,15 @@ export class UpstashRedisStorage implements IStorage {
     // 删除用户登入统计数据
     const loginStatsKey = `user_login_stats:${userName}`;
     await withRetry(() => this.client.del(loginStatsKey));
+
+    // 删除永久搜索记录
+    await withRetry(() => this.client.del(this.permanentSearchKey(userName)));
+
+    // 删除永久收藏记录
+    await withRetry(() => this.client.del(this.permanentFavoriteKey(userName)));
+
+    // 删除永久观影记录
+    await withRetry(() => this.client.del(this.permanentPlayKey(userName)));
   }
 
   // ---------- 搜索历史 ----------
@@ -261,6 +270,146 @@ export class UpstashRedisStorage implements IStorage {
       await withRetry(() => this.client.lrem(key, 0, ensureString(keyword)));
     } else {
       await withRetry(() => this.client.del(key));
+    }
+  }
+
+  // ---------- 永久搜索记录 ----------
+  private permanentSearchKey(user: string) {
+    return `u:${user}:permanent-search`; // u:username:permanent-search
+  }
+
+  async addPermanentSearchRecord(userName: string, keyword: string, timestamp: number): Promise<void> {
+    const key = this.permanentSearchKey(userName);
+    // 存储格式: keyword|timestamp
+    const record = `${ensureString(keyword)}|${timestamp}`;
+    // 插入到列表末尾（保持时间顺序）
+    await withRetry(() => this.client.rpush(key, record));
+  }
+
+  async getPermanentSearchRecords(userName: string, limit = 100): Promise<Array<{ keyword: string; timestamp: number }>> {
+    const key = this.permanentSearchKey(userName);
+    // 获取最近的记录（从列表末尾开始）
+    const start = Math.max(0, -(limit || 100));
+    const records = await withRetry(() => this.client.lrange(key, start, -1));
+    
+    // 解析记录格式
+    return records.map(record => {
+      const [keyword, timestampStr] = record.split('|');
+      return {
+        keyword: ensureString(keyword),
+        timestamp: parseInt(timestampStr, 10) || Date.now()
+      };
+    }).reverse(); // 返回最新的在前面
+  }
+
+  async clearPermanentSearchRecords(userName: string): Promise<void> {
+    const key = this.permanentSearchKey(userName);
+    await withRetry(() => this.client.del(key));
+  }
+
+  // ---------- 永久收藏记录 ----------
+  private permanentFavoriteKey(user: string) {
+    return `u:${user}:permanent-favorites`; // u:username:permanent-favorites
+  }
+
+  private permanentFavoriteItemKey(user: string, key: string) {
+    return `u:${user}:permanent-fav:${key}`; // u:username:permanent-fav:source+id
+  }
+
+  async addPermanentFavoriteRecord(userName: string, favorite: Favorite): Promise<void> {
+    // 生成唯一键（source+title，因为Favorite没有id字段）
+    const favoriteKey = `${favorite.source_name}+${favorite.title}`;
+    const itemKey = this.permanentFavoriteItemKey(userName, favoriteKey);
+    // 存储完整的JSON格式，与常规收藏记录保持一致
+    await withRetry(() => this.client.set(itemKey, JSON.stringify(favorite)));
+  }
+
+  async getPermanentFavoriteRecords(userName: string, limit = 100): Promise<Favorite[]> {
+    const pattern = `u:${userName}:permanent-fav:*`;
+    const keys: string[] = await withRetry(() => this.client.keys(pattern));
+    if (keys.length === 0) return [];
+    
+    // 获取所有记录
+    const values = await withRetry(() => this.client.mget(keys));
+    const favorites: Favorite[] = [];
+    
+    keys.forEach((fullKey: string, idx: number) => {
+      const raw = values[idx];
+      if (raw) {
+        try {
+          const favorite = JSON.parse(raw as string) as Favorite;
+          favorites.push(favorite);
+        } catch (error) {
+          console.error('解析永久收藏记录失败:', error);
+        }
+      }
+    });
+    
+    // 按保存时间降序排序，并限制数量
+    return favorites
+      .sort((a, b) => (b.save_time || 0) - (a.save_time || 0))
+      .slice(0, limit || 100);
+  }
+
+  async clearPermanentFavoriteRecords(userName: string): Promise<void> {
+    const pattern = `u:${userName}:permanent-fav:*`;
+    const keys = await withRetry(() => this.client.keys(pattern));
+    if (keys.length > 0) {
+      // Upstash Redis 的 del 方法接受数组参数
+      await withRetry(() => this.client.del(...keys));
+    }
+  }
+
+  // ---------- 永久观影记录 ----------
+  private permanentPlayKey(user: string) {
+    return `u:${user}:permanent-plays`; // u:username:permanent-plays
+  }
+
+  private permanentPlayItemKey(user: string, key: string) {
+    return `u:${user}:permanent-play:${key}`; // u:username:permanent-play:source+id
+  }
+
+  async addPermanentPlayRecord(userName: string, playRecord: PlayRecord): Promise<void> {
+    // 生成唯一键（source+title，因为PlayRecord没有id字段）
+    const playKey = `${playRecord.source_name}+${playRecord.title}`;
+    const itemKey = this.permanentPlayItemKey(userName, playKey);
+    // 存储完整的JSON格式，与常规观影记录保持一致
+    await withRetry(() => this.client.set(itemKey, JSON.stringify(playRecord)));
+  }
+
+  async getPermanentPlayRecords(userName: string, limit = 100): Promise<PlayRecord[]> {
+    const pattern = `u:${userName}:permanent-play:*`;
+    const keys: string[] = await withRetry(() => this.client.keys(pattern));
+    if (keys.length === 0) return [];
+    
+    // 获取所有记录
+    const values = await withRetry(() => this.client.mget(keys));
+    const playRecords: PlayRecord[] = [];
+    
+    keys.forEach((fullKey: string, idx: number) => {
+      const raw = values[idx];
+      if (raw) {
+        try {
+          const playRecord = JSON.parse(raw as string) as PlayRecord;
+          playRecords.push(playRecord);
+        } catch (error) {
+          console.error('解析永久观影记录失败:', error);
+        }
+      }
+    });
+    
+    // 按保存时间降序排序，并限制数量
+    return playRecords
+      .sort((a, b) => (b.save_time || 0) - (a.save_time || 0))
+      .slice(0, limit || 100);
+  }
+
+  async clearPermanentPlayRecords(userName: string): Promise<void> {
+    const pattern = `u:${userName}:permanent-play:*`;
+    const keys = await withRetry(() => this.client.keys(pattern));
+    if (keys.length > 0) {
+      // Upstash Redis 的 del 方法接受数组参数
+      await withRetry(() => this.client.del(...keys));
     }
   }
 

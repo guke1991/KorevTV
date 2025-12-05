@@ -175,6 +175,45 @@ export class DbManager {
     await this.storage.deleteSearchHistory(userName, keyword);
   }
 
+  // ---------- 永久搜索记录 ----------
+  async addPermanentSearchRecord(userName: string, keyword: string, timestamp: number): Promise<void> {
+    await this.storage.addPermanentSearchRecord(userName, keyword, timestamp);
+  }
+
+  async getPermanentSearchRecords(userName: string, limit?: number): Promise<Array<{ keyword: string; timestamp: number }>> {
+    return this.storage.getPermanentSearchRecords(userName, limit);
+  }
+
+  async clearPermanentSearchRecords(userName: string): Promise<void> {
+    await this.storage.clearPermanentSearchRecords(userName);
+  }
+
+  // ---------- 永久收藏记录 ----------
+  async addPermanentFavoriteRecord(userName: string, favorite: Favorite): Promise<void> {
+    await this.storage.addPermanentFavoriteRecord(userName, favorite);
+  }
+
+  async getPermanentFavoriteRecords(userName: string, limit?: number): Promise<Favorite[]> {
+    return this.storage.getPermanentFavoriteRecords(userName, limit);
+  }
+
+  async clearPermanentFavoriteRecords(userName: string): Promise<void> {
+    await this.storage.clearPermanentFavoriteRecords(userName);
+  }
+
+  // ---------- 永久观影记录 ----------
+  async addPermanentPlayRecord(userName: string, playRecord: PlayRecord): Promise<void> {
+    await this.storage.addPermanentPlayRecord(userName, playRecord);
+  }
+
+  async getPermanentPlayRecords(userName: string, limit?: number): Promise<PlayRecord[]> {
+    return this.storage.getPermanentPlayRecords(userName, limit);
+  }
+
+  async clearPermanentPlayRecords(userName: string): Promise<void> {
+    await this.storage.clearPermanentPlayRecords(userName);
+  }
+
   // 获取全部用户名
   async getAllUsers(): Promise<string[]> {
     if (typeof (this.storage as any).getAllUsers === 'function') {

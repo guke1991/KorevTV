@@ -97,6 +97,9 @@ const STORAGE_TYPE = (() => {
 // 搜索历史最大保存条数
 const SEARCH_HISTORY_LIMIT = 20;
 
+// 永久搜索记录相关常量
+const PERMANENT_SEARCH_RECORDS_KEY = 'moontv_permanent_search_records';
+
 // ---- 内存缓存（用于 Kvrocks/Upstash 模式）----
 const memoryCache: Map<string, UserCacheStore> = new Map();
 
@@ -875,6 +878,9 @@ export async function savePlayRecord(
         body: JSON.stringify({ key, record }),
       });
 
+      // 保存永久观影记录
+      await addPermanentPlayRecord(source, id, record);
+
       // 🔑 关键修复：数据库更新成功后，如果更新了 original_episodes，清除相关缓存
       if ((record as any)._shouldClearCache) {
         try {
@@ -930,6 +936,9 @@ export async function savePlayRecord(
         detail: allRecords,
       })
     );
+
+    // 保存永久观影记录
+    await addPermanentPlayRecord(source, id, record);
 
     // 异步更新用户统计数据（不阻塞主流程）
     updateUserStats(record).catch(err => {
@@ -1074,6 +1083,9 @@ export async function getSearchHistory(): Promise<string[]> {
 export async function addSearchHistory(keyword: string): Promise<void> {
   const trimmed = keyword.trim();
   if (!trimmed) return;
+
+  // 添加到永久搜索记录
+  await addPermanentSearchRecord(trimmed, Date.now());
 
   // 数据库存储模式：乐观更新策略（包括 redis 和 upstash）
   if (STORAGE_TYPE !== 'localstorage') {
@@ -1222,6 +1234,374 @@ export async function deleteSearchHistory(keyword: string): Promise<void> {
   }
 }
 
+// ---------------- 永久搜索记录相关 API ----------------
+
+/**
+ * 添加永久搜索记录。
+ */
+export async function addPermanentSearchRecord(keyword: string, timestamp: number): Promise<void> {
+  // 数据库存储模式
+  if (STORAGE_TYPE !== 'localstorage') {
+    try {
+      // 对于数据库模式，永久记录已在API端点中处理
+      return;
+    } catch (err) {
+      console.error('添加永久搜索记录失败:', err);
+      return;
+    }
+  }
+
+  // localStorage 模式
+  if (typeof window === 'undefined') return;
+  
+  try {
+    // 获取现有的永久搜索记录
+    const raw = localStorage.getItem(PERMANENT_SEARCH_RECORDS_KEY);
+    let records: Array<{ keyword: string; timestamp: number }> = [];
+    
+    if (raw) {
+      try {
+        records = JSON.parse(raw) as Array<{ keyword: string; timestamp: number }>;
+        if (!Array.isArray(records)) {
+          records = [];
+        }
+      } catch (parseErr) {
+        records = [];
+      }
+    }
+    
+    // 添加新记录
+    records.push({ keyword, timestamp });
+    
+    // 限制记录数量为1000条
+    if (records.length > 1000) {
+      records = records.slice(-1000);
+    }
+    
+    // 保存回localStorage
+    localStorage.setItem(PERMANENT_SEARCH_RECORDS_KEY, JSON.stringify(records));
+  } catch (err) {
+    console.error('保存永久搜索记录失败:', err);
+  }
+}
+
+/**
+ * 获取永久搜索记录。
+ */
+export async function getPermanentSearchRecords(limit?: number): Promise<Array<{ keyword: string; timestamp: number }>> {
+  // 数据库存储模式
+  if (STORAGE_TYPE !== 'localstorage') {
+    try {
+      const response = await fetchWithAuth(`/api/permanent-search-records${limit ? `?limit=${limit}` : ''}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const records = await response.json();
+      return records;
+    } catch (err) {
+      console.error('获取永久搜索记录失败:', err);
+      triggerGlobalError('获取永久搜索记录失败');
+      return [];
+    }
+  }
+
+  // localStorage 模式
+  if (typeof window === 'undefined') return [];
+  
+  try {
+    const raw = localStorage.getItem(PERMANENT_SEARCH_RECORDS_KEY);
+    if (!raw) return [];
+    const records = JSON.parse(raw) as Array<{ keyword: string; timestamp: number }>;
+    // 仅返回数组
+    const result = Array.isArray(records) ? records : [];
+    // 应用限制
+    return limit ? result.slice(0, limit) : result;
+  } catch (err) {
+    console.error('读取永久搜索记录失败:', err);
+    triggerGlobalError('读取永久搜索记录失败');
+    return [];
+  }
+}
+
+/**
+ * 清空永久搜索记录。
+ */
+export async function clearPermanentSearchRecords(): Promise<void> {
+  // 数据库存储模式
+  if (STORAGE_TYPE !== 'localstorage') {
+    try {
+      const response = await fetchWithAuth('/api/permanent-search-records', {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (err) {
+      console.error('清空永久搜索记录失败:', err);
+      triggerGlobalError('清空永久搜索记录失败');
+    }
+    return;
+  }
+
+  // localStorage 模式
+  if (typeof window === 'undefined') return;
+  
+  try {
+    localStorage.removeItem(PERMANENT_SEARCH_RECORDS_KEY);
+  } catch (err) {
+    console.error('清空永久搜索记录失败:', err);
+    triggerGlobalError('清空永久搜索记录失败');
+  }
+}
+
+// ---------------- 永久收藏记录相关 API ----------------
+
+/**
+ * 添加永久收藏记录。
+ */
+export async function addPermanentFavoriteRecord(source: string, id: string, favorite: Favorite): Promise<void> {
+  // 数据库存储模式
+  if (STORAGE_TYPE !== 'localstorage') {
+    try {
+      // 对于数据库模式，永久记录已在API端点中处理
+      return;
+    } catch (err) {
+      console.error('添加永久收藏记录失败:', err);
+      return;
+    }
+  }
+
+  // localStorage 模式
+  if (typeof window === 'undefined') return;
+  
+  try {
+    // 获取现有的永久收藏记录
+    const raw = localStorage.getItem('moontv_permanent_favorites');
+    let records: Record<string, Favorite> = {};
+    
+    if (raw) {
+      try {
+        records = JSON.parse(raw) as Record<string, Favorite>;
+        if (typeof records !== 'object' || Array.isArray(records)) {
+          records = {};
+        }
+      } catch (parseErr) {
+        records = {};
+      }
+    }
+    
+    // 生成唯一键（source+title，因为Favorite没有id字段）
+    const favoriteKey = `${favorite.source_name}+${favorite.title}`;
+    // 更新记录（确保唯一性）
+    records[favoriteKey] = favorite;
+    
+    // 保存回localStorage
+    localStorage.setItem('moontv_permanent_favorites', JSON.stringify(records));
+  } catch (err) {
+    console.error('保存永久收藏记录失败:', err);
+  }
+}
+
+/**
+ * 获取永久收藏记录。
+ */
+export async function getPermanentFavoriteRecords(limit?: number): Promise<Favorite[]> {
+  // 数据库存储模式
+  if (STORAGE_TYPE !== 'localstorage') {
+    try {
+      const response = await fetchWithAuth(`/api/permanent-favorite-records${limit ? `?limit=${limit}` : ''}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const records = await response.json();
+      return records;
+    } catch (err) {
+      console.error('获取永久收藏记录失败:', err);
+      triggerGlobalError('获取永久收藏记录失败');
+      return [];
+    }
+  }
+
+  // localStorage 模式
+  if (typeof window === 'undefined') return [];
+  
+  try {
+    const raw = localStorage.getItem('moontv_permanent_favorites');
+    if (!raw) return [];
+    const records = JSON.parse(raw) as Record<string, Favorite>;
+    if (typeof records !== 'object' || Array.isArray(records)) {
+      return [];
+    }
+    
+    // 转换为数组并按保存时间排序
+    const favorites = Object.values(records)
+      .sort((a, b) => (b.save_time || 0) - (a.save_time || 0));
+    
+    // 应用限制
+    return limit ? favorites.slice(0, limit) : favorites;
+  } catch (err) {
+    console.error('读取永久收藏记录失败:', err);
+    triggerGlobalError('读取永久收藏记录失败');
+    return [];
+  }
+}
+
+/**
+ * 清空永久收藏记录。
+ */
+export async function clearPermanentFavoriteRecords(): Promise<void> {
+  // 数据库存储模式
+  if (STORAGE_TYPE !== 'localstorage') {
+    try {
+      const response = await fetchWithAuth('/api/permanent-favorite-records', {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (err) {
+      console.error('清空永久收藏记录失败:', err);
+      triggerGlobalError('清空永久收藏记录失败');
+    }
+    return;
+  }
+
+  // localStorage 模式
+  if (typeof window === 'undefined') return;
+  
+  try {
+    localStorage.removeItem('moontv_permanent_favorites');
+  } catch (err) {
+    console.error('清空永久收藏记录失败:', err);
+    triggerGlobalError('清空永久收藏记录失败');
+  }
+}
+
+
+
+// ---------------- 永久观影记录相关 API ----------------
+
+/**
+ * 添加永久观影记录。
+ */
+export async function addPermanentPlayRecord(source: string, id: string, record: PlayRecord): Promise<void> {
+  // 数据库存储模式
+  if (STORAGE_TYPE !== 'localstorage') {
+    try {
+      // 对于数据库模式，永久记录已在API端点中处理
+      return;
+    } catch (err) {
+      console.error('添加永久观影记录失败:', err);
+      return;
+    }
+  }
+
+  // localStorage 模式
+  if (typeof window === 'undefined') return;
+  
+  try {
+    // 获取现有的永久观影记录
+    const raw = localStorage.getItem('moontv_permanent_play_records');
+    let records: Record<string, PlayRecord> = {};
+    
+    if (raw) {
+      try {
+        records = JSON.parse(raw) as Record<string, PlayRecord>;
+        if (typeof records !== 'object' || Array.isArray(records)) {
+          records = {};
+        }
+      } catch (parseErr) {
+        records = {};
+      }
+    }
+    
+    // 生成唯一键（source+title，因为PlayRecord没有id字段）
+    const playKey = `${record.source_name}+${record.title}`;
+    // 更新记录（确保唯一性）
+    records[playKey] = record;
+    
+    // 保存回localStorage
+    localStorage.setItem('moontv_permanent_play_records', JSON.stringify(records));
+  } catch (err) {
+    console.error('保存永久观影记录失败:', err);
+  }
+}
+
+/**
+ * 获取永久观影记录。
+ */
+export async function getPermanentPlayRecords(limit?: number): Promise<PlayRecord[]> {
+  // 数据库存储模式
+  if (STORAGE_TYPE !== 'localstorage') {
+    try {
+      const response = await fetchWithAuth(`/api/permanent-play-records${limit ? `?limit=${limit}` : ''}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const records = await response.json();
+      return records;
+    } catch (err) {
+      console.error('获取永久观影记录失败:', err);
+      triggerGlobalError('获取永久观影记录失败');
+      return [];
+    }
+  }
+
+  // localStorage 模式
+  if (typeof window === 'undefined') return [];
+  
+  try {
+    const raw = localStorage.getItem('moontv_permanent_play_records');
+    if (!raw) return [];
+    const records = JSON.parse(raw) as Record<string, PlayRecord>;
+    if (typeof records !== 'object' || Array.isArray(records)) {
+      return [];
+    }
+    
+    // 转换为数组并按保存时间排序
+    const playRecords = Object.values(records)
+      .sort((a, b) => (b.save_time || 0) - (a.save_time || 0));
+    
+    // 应用限制
+    return limit ? playRecords.slice(0, limit) : playRecords;
+  } catch (err) {
+    console.error('读取永久观影记录失败:', err);
+    triggerGlobalError('读取永久观影记录失败');
+    return [];
+  }
+}
+
+/**
+ * 清空永久观影记录。
+ */
+export async function clearPermanentPlayRecords(): Promise<void> {
+  // 数据库存储模式
+  if (STORAGE_TYPE !== 'localstorage') {
+    try {
+      const response = await fetchWithAuth('/api/permanent-play-records', {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (err) {
+      console.error('清空永久观影记录失败:', err);
+      triggerGlobalError('清空永久观影记录失败');
+    }
+    return;
+  }
+
+  // localStorage 模式
+  if (typeof window === 'undefined') return;
+  
+  try {
+    localStorage.removeItem('moontv_permanent_play_records');
+  } catch (err) {
+    console.error('清空永久观影记录失败:', err);
+    triggerGlobalError('清空永久观影记录失败');
+  }
+}
+
 // ---------------- 收藏相关 API ----------------
 
 /**
@@ -1322,6 +1702,9 @@ export async function saveFavorite(
         },
         body: JSON.stringify({ key, favorite }),
       });
+
+      // 保存永久收藏记录
+      await addPermanentFavoriteRecord(source, id, favorite);
     } catch (err) {
       await handleDatabaseOperationFailure('favorites', err);
       triggerGlobalError('保存收藏失败');
@@ -1345,6 +1728,9 @@ export async function saveFavorite(
         detail: allFavorites,
       })
     );
+
+    // 保存永久收藏记录
+    await addPermanentFavoriteRecord(source, id, favorite);
   } catch (err) {
     console.error('保存收藏失败:', err);
     triggerGlobalError('保存收藏失败');

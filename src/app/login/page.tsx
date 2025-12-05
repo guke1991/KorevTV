@@ -69,7 +69,7 @@ function LoginPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('wenxi');
+  const [username, setUsername] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [shouldAskUsername, setShouldAskUsername] = useState(true);

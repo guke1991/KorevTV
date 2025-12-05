@@ -106,6 +106,21 @@ export interface IStorage {
   addSearchHistory(userName: string, keyword: string): Promise<void>;
   deleteSearchHistory(userName: string, keyword?: string): Promise<void>;
 
+  // 永久搜索记录相关（不受用户清除影响，记录搜索时间）
+  addPermanentSearchRecord(userName: string, keyword: string, timestamp: number): Promise<void>;
+  getPermanentSearchRecords(userName: string, limit?: number): Promise<Array<{ keyword: string; timestamp: number }>>;
+  clearPermanentSearchRecords(userName: string): Promise<void>;
+
+  // 永久收藏记录相关（不受用户清除影响，记录完整的收藏信息）
+  addPermanentFavoriteRecord(userName: string, favorite: Favorite): Promise<void>;
+  getPermanentFavoriteRecords(userName: string, limit?: number): Promise<Favorite[]>;
+  clearPermanentFavoriteRecords(userName: string): Promise<void>;
+
+  // 永久观影记录相关（不受用户清除影响，记录完整的观影信息）
+  addPermanentPlayRecord(userName: string, playRecord: PlayRecord): Promise<void>;
+  getPermanentPlayRecords(userName: string, limit?: number): Promise<PlayRecord[]>;
+  clearPermanentPlayRecords(userName: string): Promise<void>;
+
   // 用户列表
   getAllUsers(): Promise<string[]>;
 

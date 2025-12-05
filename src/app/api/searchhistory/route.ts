@@ -85,6 +85,9 @@ export async function POST(request: NextRequest) {
     }
 
     await db.addSearchHistory(authInfo.username, keyword);
+    
+    // 同时添加到永久搜索记录（记录时间戳）
+    await db.addPermanentSearchRecord(authInfo.username, keyword, Date.now());
 
     // 再次获取最新列表，确保客户端与服务端同步
     const history = await db.getSearchHistory(authInfo.username);

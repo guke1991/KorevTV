@@ -118,22 +118,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // 先检查配置中是否允许注册
-    try {
-      const config = await getConfig();
-      const allowRegister = config.UserConfig?.AllowRegister !== false; // 默认允许注册
-      
-      if (!allowRegister) {
-        return NextResponse.json(
-          { error: '管理员已关闭用户注册功能' },
-          { status: 403 }
-        );
-      }
-    } catch (err) {
-      console.error('检查注册配置失败', err);
-      return NextResponse.json({ error: '注册失败，请稍后重试' }, { status: 500 });
-    }
-
     try {
       // 检查用户是否已存在
       const userExists = await db.checkUserExist(username);
