@@ -125,6 +125,14 @@ export async function POST(request: NextRequest) {
 
     await db.saveFavorite(authInfo.username, source, id, finalFavorite);
 
+    // 保存永久收藏记录
+    try {
+      await db.addPermanentFavoriteRecord(authInfo.username, finalFavorite);
+    } catch (permErr) {
+      console.warn('保存永久收藏记录失败:', permErr);
+      // 不影响主流程
+    }
+
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (err) {
     console.error('保存收藏失败', err);
