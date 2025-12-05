@@ -33,7 +33,7 @@ ENV DOCKER_ENV=true
 RUN pnpm dlx update-browserslist-db@latest
 
 # 提升 Node 可用内存，减少类型检查或打包过程中的取消报错
-ENV NODE_OPTIONS=--max-old-space-size=2048
+ENV NODE_OPTIONS=--max-old-space-size=4096
 
 # 生成生产构建
 RUN pnpm run build
